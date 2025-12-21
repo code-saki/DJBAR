@@ -23,13 +23,18 @@ const Header: React.FC = () => {
       <Flex align="center" justify="space-between" maxW="1200px" mx="auto" gap={3}>
         {/* 左：ロゴ */}
         <Box fontWeight="bold" fontSize="xl" fontFamily="serif">
-          <RouterLink to="/">ANDO EVENTS WEB</RouterLink>
+          <RouterLink to="/">
+            <Flex align="center" gap={2}>
+              <img src="/images/favicon.ico" alt="NLinA Logo" style={{ height: '30px' }} />
+              <span>NLinA</span>
+            </Flex>
+          </RouterLink>
         </Box>
 
         {/* 中：ナビ */}
         <Flex gap={2} align="center">
           <RouterLink to="/events">
-            <Button variant="ghost">イベント</Button>
+            <Button variant="ghost">EVENTS</Button>
           </RouterLink>
           <RouterLink to="/djs/1">
             <Button variant="ghost">DJ</Button>

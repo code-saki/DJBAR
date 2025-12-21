@@ -70,7 +70,6 @@ const EventList = () => {
     <Box
       minH="100vh"
       py={12}
-      backgroundImage={`url('images/cyberbackground.webp')`}
       backgroundSize="cover"
       backgroundRepeat="no-repeat"
       backgroundAttachment="fixed"
@@ -82,11 +81,11 @@ const EventList = () => {
         fontWeight="bold"
         letterSpacing="wide"
         mb={10}
-        color="white"
+        color="black"
         textAlign="center"
         fontFamily="serif"
       >
-        DJ BAR EVENTS
+        night life in asakusa
       </Heading>
 
       <Box textAlign="center" mb={8}>
@@ -102,7 +101,7 @@ const EventList = () => {
           columns={{ base: 1, md: 2, lg: 3 }}
           gap={10}
           px={{ base: 2, md: 6, lg: 16 }}
-          color={'white'}
+          color={'black'}
         >
           {events.map((ev) => {
             const id = ev.id;
@@ -134,10 +133,10 @@ const EventList = () => {
                   w="100%"
                   h="220px"
                   onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src = '/vite.svg';
+                    (e.currentTarget as HTMLImageElement).src = '/logo.png';
                   }}
                 />
-                <Box p={5} color={'white'}>
+                <Box p={5} color={'black'}>
                   <Heading fontSize="xl" mb={2} fontFamily="serif">
                     <Link to={`/events/${id}`}>{title}</Link>
                   </Heading>

@@ -50,46 +50,63 @@ try {
 
   // ========= ユーザー登録（POST /register）=========
   // body: { "email": "...", "password": "...", "name": "..." }
-  if ($endpoint === '/register' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    try {
-      $body = read_json();
-      $email = trim((string)($body['email'] ?? ''));
-      $password = (string)($body['password'] ?? '');
-      $name = trim((string)($body['name'] ?? ''));
+  if ($endpoint === '/api/register' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
-      if ($email === '' || $password === '') {
-        respond(['error' => 'email and password are required'], 400);
-      }
-
-      // 既存メール
-      $st = $pdo->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
-      $st->execute([$email]);
-      if ($st->fetch()) {
-        respond(['error' => 'email already exists'], 409);
-      }
-
-      // ハッシュ化して保存（カラム名は password のまま）
-      $hash = password_hash($password, PASSWORD_DEFAULT);
-      if ($hash === false) {
-        respond(['error' => 'password hash failed'], 500);
-      }
-
-      $st = $pdo->prepare('INSERT INTO users (email, password, name) VALUES (?, ?, ?)');
-      $st->execute([$email, $hash, $name !== '' ? $name : null]);
-
-      $userId = (int)$pdo->lastInsertId();
-      respond([
-        'ok' => true,
-        'user' => [
-          'id'    => $userId,
-          'email' => $email,
-          'name'  => $name !== '' ? $name : null,
-        ],
-      ], 201);
-
-    } catch (Throwable $e) {
-      respond_error($e, 500);
+    
+    $email     = trim((string)($body['email'] ?? ''));
+    $password  = (string)($body['password'] ?? '');
+    $birthdate = trim((string)($body['birthdate'] ?? ''));
+    $display_name = (string)($body['display_name'] ?? '');
+    
+    // 未入力バリデーション
+    if ($email === '' || $password === '' || $passwordConfirm === '' || $birthdate === '') {
+      respond(['error' => '必須項目が未入力です（email / password / passwordConfirm / birthdate）'], 400);
     }
+    // メールアドレス形式バリデーション
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+      respond(['error' => 'メールアドレスの形式が不正です'], 400);
+    }
+
+    // 生年月日バリデーション（YYYY-MM-DD）
+    $dt = DateTime::createFromFormat('Y-m-d', $birthdate);
+    $errors = DateTime::getLastErrors();
+    if ($dt === false || $errors['warning_count'] > 0 || $errors['error_count'] > 0) {
+      respond(['error' => '生年月日の形式は YYYY-MM-DD で入力してください'], 400);
+    }
+    $birthdateSql = $dt->format('Y-m-d');
+
+    // 既存メール重複チェック
+    $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
+    $stmt->execute([$email]);
+    if ($stmt->fetch()) {
+      respond(['error' => 'このメールアドレスは既に登録されています'], 409);
+    }
+
+    // パスワードハッシュ
+    $hash = password_hash($password, PASSWORD_DEFAULT);
+
+    // 作成（display_name は今回未入力想定なので NULL）
+    $stmt = $pdo->prepare(
+      'INSERT INTO users (email, password, display_name, user_birthday_date, user_role)
+       VALUES (:email, :password, NULL, :bday, 0)'
+    );
+    $stmt->execute([
+      ':email'    => $email,
+      ':password' => $hash,
+      ':bday'     => $birthdateSql,
+    ]);
+
+    $newId = (int)$pdo->lastInsertId();
+
+    respond([
+      'ok' => true,
+      'user' => [
+        'id' => $newId,
+        'email' => $email,
+        'user_role' => 0,
+        'user_birthday_date' => $birthdateSql,
+      ],
+    ], 201);
   }
 
   // ========= ログイン（POST /login）=========
@@ -128,7 +145,7 @@ try {
       respond([
         'id'    => (int)$user['id'],
         'email' => $user['email'],
-        'name'  => $user['name'],
+        'display_name'  => $user['display_name'],
       ]);
 
     } catch (Throwable $e) {

@@ -37,9 +37,7 @@ export default function Home() {
         color="black"
         textAlign="center"
         fontFamily="serif"
-      >
-        DJ BAR EVENTS
-      </Heading>
+      ></Heading>
 
       {err && (
         <Box color="red.500" textAlign="center" mb={6}>
